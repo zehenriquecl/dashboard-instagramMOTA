@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080" />
+  <title>Instagram Growth Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #080810;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 20px 0;
+    }
+    .dashboard {
+      width: 1080px;
+      min-height: 1920px;
+      background: linear-gradient(160deg, #0d0d1a 0%, #0a0a14 40%, #0d0a1a 100%);
+      border-radius: 32px;
+      padding: 60px 56px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 120px rgba(131,56,236,0.15);
+    }
+    .dashboard::before {
+      content: '';
+      position: absolute;
+      top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(131,56,236,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .dashboard::after {
+      content: '';
+      position: absolute;
+      bottom: 200px; left: -150px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(225,48,108,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .header {
+      display: flex; align-items: center; gap: 24px;
+      margin-bottom: 48px; position: relative; z-index: 2;
+    }
+    .ig-logo {
+      width: 72px; height: 72px; border-radius: 18px;
+      background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 32px rgba(220,39,67,0.4); flex-shrink: 0;
+    }
+    .ig-logo svg { width: 40px; height: 40px; }
+    .header-text { flex: 1; }
+    .header-account { font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -0.5px; line-height: 1.1; }
+    .header-subtitle { font-size: 15px; font-weight: 400; color: rgba(255,255,255,0.45); margin-top: 4px; }
+    .header-badge {
+      background: linear-gradient(135deg, rgba(131,56,236,0.2), rgba(225,48,108,0.2));
+      border: 1px solid rgba(131,56,236,0.3);
+      border-radius: 12px; padding: 8px 16px; text-align: right; white-space: nowrap;
+    }
+    .header-badge .badge-label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+    .header-badge .badge-time  { font-size: 13px; color: rgba(255,255,255,0.8); font-weight: 600; margin-top: 2px; }
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(131,56,236,0.4), rgba(225,48,108,0.4), transparent);
+      margin-bottom: 44px; position: relative; z-index: 2;
+    }
+    .section-title {
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.35);
+      text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; position: relative; z-index: 2;
+    }
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 44px; position: relative; z-index: 2; }
+    .kpi-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px; padding: 28px 28px 24px; position: relative; overflow: hidden;
+    }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 24px 24px 0 0; }
+    .kpi-card.purple::before { background: linear-gradient(90deg, #8338ec, #c77dff); }
+    .kpi-card.pink::before   { background: linear-gradient(90deg, #e1306c, #f77737); }
+    .kpi-card.blue::before   { background: linear-gradient(90deg, #3a86ff, #48cae4); }
+    .kpi-card.green::before  { background: linear-gradient(90deg, #06d6a0, #0ead69); }
+    .kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px; }
+    .kpi-card.purple .kpi-icon { background: rgba(131,56,236,0.2); }
+    .kpi-card.pink   .kpi-icon { background: rgba(225,48,108,0.2); }
+    .kpi-card.blue   .kpi-icon { background: rgba(58,134,255,0.2); }
+    .kpi-card.green  .kpi-icon { background: rgba(6,214,160,0.2);  }
+    .kpi-label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
+    .kpi-value { font-size: 38px; font-weight: 800; color: #fff; letter-spacing: -1px; line-height: 1; }
+    .kpi-trend { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+    .trend-up      { background: rgba(6,214,160,0.15);  color: #06d6a0; }
+    .trend-down    { background: rgba(255,77,77,0.15);   color: #ff4d4d; }
+    .trend-neutral { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); }
+    .chart-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px; padding: 32px; margin-bottom: 24px; position: relative; z-index: 2;
+    }
+    .chart-title    { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin-bottom: 6px; }
+    .chart-subtitle { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 24px; }
+    .table-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px; padding: 32px; margin-bottom: 24px; position: relative; z-index: 2;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35);
+      text-transform: uppercase; letter-spacing: 1.2px;
+      padding: 0 16px 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr.highlight-row { background: rgba(131,56,236,0.08); }
+    tbody td { font-size: 14px; color: rgba(255,255,255,0.75); padding: 14px 16px; }
+    tbody td:first-child { font-weight: 500; color: rgba(255,255,255,0.9); }
+    .badge-reach     { background: rgba(58,134,255,0.15); color: #3a86ff; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+    .badge-followers { background: rgba(131,56,236,0.15); color: #c77dff; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+    .badge-new       { background: rgba(6,214,160,0.15);  color: #06d6a0; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+    .footer { text-align: center; margin-top: 40px; position: relative; z-index: 2; }
+    .footer-line  { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); margin-bottom: 24px; }
+    .footer-text  { font-size: 12px; color: rgba(255,255,255,0.2); }
+    .footer-brand { font-size: 13px; font-weight: 600; background: linear-gradient(90deg, #8338ec, #e1306c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-top: 4px; }
+    #loadingState { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; z-index: 10; }
+    .loading-spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #8338ec; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: rgba(255,255,255,0.4); font-size: 14px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <div id="loadingState">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Carregando dados da planilha...</div>
+  </div>
+
+  <div id="mainContent" class="hidden">
+    <div class="header">
+      <div class="ig-logo">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="2" width="20" height="20" rx="6" stroke="white" stroke-width="1.8"/>
+          <circle cx="12" cy="12" r="4.5" stroke="white" stroke-width="1.8"/>
+          <circle cx="17.5" cy="6.5" r="1" fill="white"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <div class="header-account" id="accountName">—</div>
+        <div class="header-subtitle">Relatório de Crescimento — Últimos 30 Dias</div>
+      </div>
+      <div class="header-badge">
+        <div class="badge-label">Atualizado em</div>
+        <div class="badge-time" id="lastUpdated">—</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+
+    <div class="section-title">Indicadores Principais</div>
+    <div class="kpi-grid">
+      <div class="kpi-card purple">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-label">Total de Seguidores</div>
+        <div class="kpi-value" id="kpiFollowers">—</div>
+        <div id="kpiFollowersTrend" class="kpi-trend trend-neutral">—</div>
+      </div>
+      <div class="kpi-card pink">
+        <div class="kpi-icon">➕</div>
+        <div class="kpi-label">Novos Seguidores</div>
+        <div class="kpi-value" id="kpiNewFollowers">—</div>
+        <div id="kpiNewFollowersTrend" class="kpi-trend trend-neutral">—</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-icon">🔥</div>
+        <div class="kpi-label">Alcance Total (30d)</div>
+        <div class="kpi-value" id="kpiReach">—</div>
+        <div id="kpiReachTrend" class="kpi-trend trend-neutral">—</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-label">Seguindo</div>
+        <div class="kpi-value" id="kpiFollowing">—</div>
+        <div id="kpiFollowingTrend" class="kpi-trend trend-neutral">—</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">📈 Alcance Diário</div>
+      <div class="chart-subtitle">Evolução do alcance nos últimos 30 dias</div>
+      <canvas id="reachChart" height="220"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">✨ Novos Seguidores por Dia</div>
+      <div class="chart-subtitle">Crescimento diário de seguidores</div>
+      <canvas id="followersChart" height="200"></canvas>
+    </div>
+
+    <div class="table-card">
+      <div class="chart-title">📋 Histórico dos Últimos 30 Dias</div>
+      <div class="chart-subtitle">Dados completos por período</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Dia</th><th>Alcance</th><th>Total de Seguidores</th><th>Novos Seguidores</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      <div class="footer-line"></div>
+      <div class="footer-text">Dashboard gerado automaticamente via Google Sheets</div>
+      <div class="footer-brand">Social Media Analytics Dashboard</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ✅ NOVA URL — Apps Script atualizado
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzfPNBVt3thQShCMAiBOFXFBAaTDdL-OmpSJbPomjK8VualyYwGuPFsv6shLroKv9FN/exec';
+
+  function fmt(n) {
+    if (n === null || n === undefined || isNaN(n)) return '—';
+    return Number(n).toLocaleString('pt-BR');
+  }
+  function fmtDate(str) {
+    if (!str) return '—';
+    const d = new Date(str + 'T00:00:00');
+    if (isNaN(d)) return str;
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  }
+  function setTrend(id, val) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (val > 0)      { el.className = 'kpi-trend trend-up';      el.textContent = '▲ ' + fmt(val); }
+    else if (val < 0) { el.className = 'kpi-trend trend-down';    el.textContent = '▼ ' + fmt(Math.abs(val)); }
+    else              { el.className = 'kpi-trend trend-neutral';  el.textContent = '— estável'; }
+  }
+
+  let reachChartInst, followersChartInst;
+
+  function buildReachChart(labels, data) {
+    const ctx = document.getElementById('reachChart').getContext('2d');
+    if (reachChartInst) reachChartInst.destroy();
+    const grad = ctx.createLinearGradient(0, 0, 0, 300);
+    grad.addColorStop(0, 'rgba(131,56,236,0.6)');
+    grad.addColorStop(1, 'rgba(131,56,236,0)');
+    reachChartInst = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{ data, borderColor: '#8338ec', borderWidth: 3, pointBackgroundColor: '#8338ec', pointRadius: 4, pointHoverRadius: 7, fill: true, backgroundColor: grad, tension: 0.4 }] },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(13,13,26,0.95)', borderColor: 'rgba(131,56,236,0.5)', borderWidth: 1, titleColor: '#fff', bodyColor: 'rgba(255,255,255,0.7)', callbacks: { label: c => ' Alcance: ' + fmt(c.raw) } } },
+        scales: {
+          x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          y: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 11 }, callback: v => fmt(v) }, grid: { color: 'rgba(255,255,255,0.06)' } }
+        }
+      }
+    });
+  }
+
+  function buildFollowersChart(labels, data) {
+    const ctx = document.getElementById('followersChart').getContext('2d');
+    if (followersChartInst) followersChartInst.destroy();
+    followersChartInst = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ data, backgroundColor: data.map((_, i) => { const r = i / Math.max(data.length-1,1); return `rgba(${Math.round(225-r*94)},${Math.round(48+r*87)},${Math.round(108+r*99)},0.85)`; }), borderRadius: 8, borderSkipped: false }] },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(13,13,26,0.95)', borderColor: 'rgba(225,48,108,0.5)', borderWidth: 1, titleColor: '#fff', bodyColor: 'rgba(255,255,255,0.7)', callbacks: { label: c => ' Novos: ' + fmt(c.raw) } } },
+        scales: {
+          x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 11 } }, grid: { display: false } },
+          y: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 11 }, callback: v => fmt(v) }, grid: { color: 'rgba(255,255,255,0.06)' } }
+        }
+      }
+    });
+  }
+
+  function buildTable(rows) {
+    const tbody = document.getElementById('dataTable');
+    tbody.innerHTML = '';
+    [...rows].reverse().forEach((r, i) => {
+      const tr = document.createElement('tr');
+      if (i === 0) tr.classList.add('highlight-row');
+      tr.innerHTML = `<td>${fmtDate(r.day)}</td><td><span class="badge-reach">${fmt(r.reach)}</span></td><td><span class="badge-followers">${fmt(r.totalFollowers)}</span></td><td><span class="badge-new">${fmt(r.newFollowers)}</span></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function render(rows) {
+    if (!rows || !rows.length) { showError('Nenhum dado encontrado.'); return; }
+    const last = rows[rows.length - 1];
+    const first = rows[0];
+
+    document.getElementById('accountName').textContent  = last.accountName || 'Perfil Instagram';
+    document.getElementById('lastUpdated').textContent  = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    document.getElementById('kpiFollowers').textContent    = fmt(last.totalFollowers);
+    document.getElementById('kpiNewFollowers').textContent = fmt(rows.reduce((s,r) => s + r.newFollowers, 0));
+    document.getElementById('kpiReach').textContent        = fmt(rows.reduce((s,r) => s + r.reach, 0));
+    document.getElementById('kpiFollowing').textContent    = fmt(last.totalFollowing);
+
+    setTrend('kpiFollowersTrend',    last.totalFollowers - first.totalFollowers);
+    setTrend('kpiNewFollowersTrend', last.newFollowers   - first.newFollowers);
+    setTrend('kpiFollowingTrend',    last.totalFollowing - first.totalFollowing);
+    const half = Math.floor(rows.length / 2);
+    setTrend('kpiReachTrend', rows.slice(half).reduce((s,r)=>s+r.reach,0) - rows.slice(0,half).reduce((s,r)=>s+r.reach,0));
+
+    buildReachChart(rows.map(r => fmtDate(r.day)), rows.map(r => r.reach));
+    buildFollowersChart(rows.map(r => fmtDate(r.day)), rows.map(r => r.newFollowers));
+    buildTable(rows);
+
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('mainContent').classList.remove('hidden');
+  }
+
+  function showError(msg) {
+    document.getElementById('loadingState').innerHTML = `
+      <div style="color:#ff4d4d;text-align:center;padding:40px;max-width:500px;">
+        ⚠️ ${msg}<br>
+        <small style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:12px;display:block;line-height:1.8;">
+          Verifique se o Apps Script está implantado<br>com acesso: <b style="color:#fff">"Qualquer pessoa"</b>
+        </small>
+        <button onclick="fetchData()" style="margin-top:20px;padding:10px 24px;background:linear-gradient(135deg,#8338ec,#e1306c);color:#fff;border:none;border-radius:12px;font-size:14px;cursor:pointer;">
+          Tentar novamente
+        </button>
+      </div>`;
+  }
+
+  function fetchData() {
+    // Reset UI
+    document.getElementById('loadingState').innerHTML = '<div class="loading-spinner"></div><div class="loading-text">Carregando dados da planilha...</div>';
+    document.getElementById('loadingState').classList.remove('hidden');
+    document.getElementById('mainContent').classList.add('hidden');
+
+    // Remove script JSONP anterior
+    const old = document.getElementById('_jsonp');
+    if (old) old.remove();
+    if (window._dashCb) delete window._dashCb;
+
+    // Timeout de segurança (8s)
+    const timeout = setTimeout(() => showError('Tempo esgotado. Verifique o Apps Script.'), 8000);
+
+    window._dashCb = function(json) {
+      clearTimeout(timeout);
+      try {
+        render((json.data || []).slice(-30));
+      } catch(e) {
+        showError('Erro ao processar: ' + e.message);
+      }
+    };
+
+    const s = document.createElement('script');
+    s.id  = '_jsonp';
+    s.src = API_URL + '?callback=_dashCb&t=' + Date.now();
+    s.onerror = () => { clearTimeout(timeout); showError('Não foi possível conectar. Verifique o Apps Script.'); };
+    document.body.appendChild(s);
+  }
+
+  fetchData();
+  setInterval(fetchData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
